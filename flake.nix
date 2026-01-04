@@ -16,12 +16,14 @@
         in {
           summarize = pkgs.callPackage ./nix/pkgs/summarize.nix {};
           gogcli = pkgs.callPackage ./nix/pkgs/gogcli.nix {};
+          camsnap = pkgs.callPackage ./nix/pkgs/camsnap.nix {};
         }
       );
 
       checks = forAllSystems (system: {
         summarize = self.packages.${system}.summarize;
         gogcli = self.packages.${system}.gogcli;
+        camsnap = self.packages.${system}.camsnap;
       });
     };
 }
