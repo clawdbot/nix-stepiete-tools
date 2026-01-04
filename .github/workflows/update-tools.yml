@@ -1,0 +1,38 @@
+name: update-tools
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v12
+
+      - name: Update tool versions and hashes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/update-tools.sh
+
+      - name: Commit & push if changed
+        run: |
+          if git diff --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git config user.name "clawdbot-ci"
+          git config user.email "ci@clawdbot"
+          git add -A
+          git commit -m "update tool releases"
+          git push

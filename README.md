@@ -26,6 +26,17 @@ scripts/sync-skills.sh
 
 This pulls `main` (sparse checkout) and only updates files when contents change.
 
+## Tool updates (latest releases)
+
+To bump tool versions + hashes from upstream GitHub releases:
+
+```bash
+scripts/update-tools.sh
+```
+
+This script uses GitHub releases directly (not Homebrew) and only edits files when
+values change. Oracle remains manual for now.
+
 ## Packages (root flake)
 
 You can also import packages directly from the root flake:
