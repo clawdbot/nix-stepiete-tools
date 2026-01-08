@@ -4,7 +4,8 @@
 
 Nix packaging for [Peter Steinberger's](https://github.com/steipete) tools, with per-tool clawdbot plugins. Part of the [nix-clawdbot](https://github.com/clawdbot/nix-clawdbot) ecosystem.
 
-Darwin/aarch64 only (Apple Silicon Macs).
+Darwin/aarch64 plus Linux (x86_64/aarch64) for tools that ship Linux builds.
+On Linux, `summarize` is built from source (Node 22 + pnpm) since upstream only ships a macOS Bun binary.
 
 ## Why this exists
 
@@ -58,6 +59,11 @@ inputs.nix-steipete-tools.url = "github:clawdbot/nix-steipete-tools";
 inputs.nix-steipete-tools.packages.aarch64-darwin.camsnap
 inputs.nix-steipete-tools.packages.aarch64-darwin.peekaboo
 # etc.
+
+# Linux examples:
+inputs.nix-steipete-tools.packages.x86_64-linux.camsnap
+inputs.nix-steipete-tools.packages.aarch64-linux.gogcli
+inputs.nix-steipete-tools.packages.x86_64-linux.summarize
 ```
 
 ## Skills syncing
@@ -86,7 +92,7 @@ Fetches latest release versions/URLs/hashes and updates the Nix expressions. Ora
 |----------|----------|--------------|
 | **sync-skills** | Every 30 min | Pulls latest skills from clawdbot main |
 | **update-tools** | Every 10 min | Checks for new tool releases |
-| **Garnix** | On push | Builds all packages via `checks.*` |
+| **Garnix** | On push | Builds all packages via `checks.*` (darwin + linux) |
 
 Automated PRs keep everything fresh without manual intervention.
 

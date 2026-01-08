@@ -8,13 +8,13 @@
 
   outputs = { self, nixpkgs, root }:
     let
-      system = "aarch64-darwin";
-      pkgs = import nixpkgs { inherit system; };
-      summarize = root.packages.${system}.summarize;
+      system = builtins.currentSystem;
+      packagesForSystem = root.packages.${system} or {};
+      summarize = packagesForSystem.summarize or null;
     in {
-      packages.${system}.summarize = summarize;
+      packages.${system} = if summarize == null then {} else { summarize = summarize; };
 
-      clawdbotPlugin = {
+      clawdbotPlugin = if summarize == null then null else {
         name = "summarize";
         skills = [ ./skills/summarize ];
         packages = [ summarize ];

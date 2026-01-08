@@ -1,13 +1,18 @@
 { lib, stdenv, fetchurl, watchman }:
 
+let
+  sources = {
+    "aarch64-darwin" = {
+      url = "https://github.com/steipete/poltergeist/releases/download/v2.1.1/poltergeist-macos-universal-v2.1.1.tar.gz";
+      hash = "sha256-plQQjbB0QV7UY7U3ZdhfAZsAY/5m0G1E1WEgMm+elk8=";
+    };
+  };
+in
 stdenv.mkDerivation {
   pname = "poltergeist";
   version = "2.1.1";
 
-  src = fetchurl {
-    url = "https://github.com/steipete/poltergeist/releases/download/v2.1.1/poltergeist-macos-universal-v2.1.1.tar.gz";
-    hash = "sha256-plQQjbB0QV7UY7U3ZdhfAZsAY/5m0G1E1WEgMm+elk8=";
-  };
+  src = fetchurl sources.${stdenv.hostPlatform.system};
 
   dontConfigure = true;
   dontBuild = true;
@@ -31,7 +36,7 @@ stdenv.mkDerivation {
     description = "Universal file watcher with auto-rebuild for any language or build system";
     homepage = "https://github.com/steipete/poltergeist";
     license = licenses.mit;
-    platforms = [ "aarch64-darwin" ];
+    platforms = builtins.attrNames sources;
     mainProgram = "poltergeist";
   };
 }

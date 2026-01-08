@@ -8,13 +8,13 @@
 
   outputs = { self, nixpkgs, root }:
     let
-      system = "aarch64-darwin";
-      pkgs = import nixpkgs { inherit system; };
-      peekaboo = root.packages.${system}.peekaboo;
+      system = builtins.currentSystem;
+      packagesForSystem = root.packages.${system} or {};
+      peekaboo = packagesForSystem.peekaboo or null;
     in {
-      packages.${system}.peekaboo = peekaboo;
+      packages.${system} = if peekaboo == null then {} else { peekaboo = peekaboo; };
 
-      clawdbotPlugin = {
+      clawdbotPlugin = if peekaboo == null then null else {
         name = "peekaboo";
         skills = [ ./skills/peekaboo ];
         packages = [ peekaboo ];

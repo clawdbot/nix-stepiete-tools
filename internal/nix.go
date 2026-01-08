@@ -39,6 +39,15 @@ func NixBuildOracle() (string, error) {
 	return out.String(), err
 }
 
+func NixBuildSummarize() (string, error) {
+	cmd := exec.Command("nix", "build", ".#summarize")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	err := cmd.Run()
+	return out.String(), err
+}
+
 func ExtractGotHash(log string) string {
 	for _, line := range strings.Split(log, "\n") {
 		if idx := strings.Index(line, "got: sha256-"); idx != -1 {

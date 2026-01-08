@@ -8,13 +8,13 @@
 
   outputs = { self, nixpkgs, root }:
     let
-      system = "aarch64-darwin";
-      pkgs = import nixpkgs { inherit system; };
-      sonoscli = root.packages.${system}.sonoscli;
+      system = builtins.currentSystem;
+      packagesForSystem = root.packages.${system} or {};
+      sonoscli = packagesForSystem.sonoscli or null;
     in {
-      packages.${system}.sonoscli = sonoscli;
+      packages.${system} = if sonoscli == null then {} else { sonoscli = sonoscli; };
 
-      clawdbotPlugin = {
+      clawdbotPlugin = if sonoscli == null then null else {
         name = "sonoscli";
         skills = [ ./skills/sonoscli ];
         packages = [ sonoscli ];

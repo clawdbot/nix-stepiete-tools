@@ -7,40 +7,66 @@
 
   outputs = { self, nixpkgs }:
     let
-      systems = [ "aarch64-darwin" ];
-      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
+      lib = nixpkgs.lib;
+      systems = [ "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+      forAllSystems = f: lib.genAttrs systems (system: f system);
+      packageSystems = {
+        summarize = [ "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+        gogcli = [ "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+        camsnap = [ "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+        sonoscli = [ "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+        bird = [ "aarch64-darwin" ];
+        peekaboo = [ "aarch64-darwin" ];
+        poltergeist = [ "aarch64-darwin" ];
+        sag = [ "aarch64-darwin" "x86_64-linux" ];
+        imsg = [ "aarch64-darwin" ];
+        oracle = [ "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+      };
     in {
       packages = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
-        in {
-          summarize = pkgs.callPackage ./nix/pkgs/summarize.nix {};
-          gogcli = pkgs.callPackage ./nix/pkgs/gogcli.nix {};
-          camsnap = pkgs.callPackage ./nix/pkgs/camsnap.nix {};
-          sonoscli = pkgs.callPackage ./nix/pkgs/sonoscli.nix {};
-          bird = pkgs.callPackage ./nix/pkgs/bird.nix {};
-          peekaboo = pkgs.callPackage ./nix/pkgs/peekaboo.nix {};
-          poltergeist = pkgs.callPackage ./nix/pkgs/poltergeist.nix {};
-          sag = pkgs.callPackage ./nix/pkgs/sag.nix {};
-          imsg = pkgs.callPackage ./nix/pkgs/imsg.nix {};
-          oracle = pkgs.callPackage ./nix/pkgs/oracle.nix {
-            pkgs = pkgs;
-            pnpm = if pkgs ? pnpm_10 then pkgs.pnpm_10 else pkgs.pnpm;
-          };
-        }
+          supports = name: lib.elem system packageSystems.${name};
+        in
+          (lib.optionalAttrs (supports "summarize") {
+            summarize = pkgs.callPackage ./nix/pkgs/summarize.nix {
+              pkgs = pkgs;
+              pnpm = if pkgs ? pnpm_10 then pkgs.pnpm_10 else pkgs.pnpm;
+              nodejs = if pkgs ? nodejs_22 then pkgs.nodejs_22 else pkgs.nodejs;
+            };
+          })
+          // (lib.optionalAttrs (supports "gogcli") {
+            gogcli = pkgs.callPackage ./nix/pkgs/gogcli.nix {};
+          })
+          // (lib.optionalAttrs (supports "camsnap") {
+            camsnap = pkgs.callPackage ./nix/pkgs/camsnap.nix {};
+          })
+          // (lib.optionalAttrs (supports "sonoscli") {
+            sonoscli = pkgs.callPackage ./nix/pkgs/sonoscli.nix {};
+          })
+          // (lib.optionalAttrs (supports "bird") {
+            bird = pkgs.callPackage ./nix/pkgs/bird.nix {};
+          })
+          // (lib.optionalAttrs (supports "peekaboo") {
+            peekaboo = pkgs.callPackage ./nix/pkgs/peekaboo.nix {};
+          })
+          // (lib.optionalAttrs (supports "poltergeist") {
+            poltergeist = pkgs.callPackage ./nix/pkgs/poltergeist.nix {};
+          })
+          // (lib.optionalAttrs (supports "sag") {
+            sag = pkgs.callPackage ./nix/pkgs/sag.nix {};
+          })
+          // (lib.optionalAttrs (supports "imsg") {
+            imsg = pkgs.callPackage ./nix/pkgs/imsg.nix {};
+          })
+          // (lib.optionalAttrs (supports "oracle") {
+            oracle = pkgs.callPackage ./nix/pkgs/oracle.nix {
+              pkgs = pkgs;
+              pnpm = if pkgs ? pnpm_10 then pkgs.pnpm_10 else pkgs.pnpm;
+            };
+          })
       );
 
-      checks = forAllSystems (system: {
-        summarize = self.packages.${system}.summarize;
-        gogcli = self.packages.${system}.gogcli;
-        camsnap = self.packages.${system}.camsnap;
-        sonoscli = self.packages.${system}.sonoscli;
-        bird = self.packages.${system}.bird;
-        peekaboo = self.packages.${system}.peekaboo;
-        poltergeist = self.packages.${system}.poltergeist;
-        sag = self.packages.${system}.sag;
-        imsg = self.packages.${system}.imsg;
-        oracle = self.packages.${system}.oracle;
-      });
+      checks = forAllSystems (system: self.packages.${system});
     };
 }

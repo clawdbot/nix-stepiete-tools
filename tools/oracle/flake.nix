@@ -8,13 +8,13 @@
 
   outputs = { self, nixpkgs, root }:
     let
-      system = "aarch64-darwin";
-      pkgs = import nixpkgs { inherit system; };
-      oracle = root.packages.${system}.oracle;
+      system = builtins.currentSystem;
+      packagesForSystem = root.packages.${system} or {};
+      oracle = packagesForSystem.oracle or null;
     in {
-      packages.${system}.oracle = oracle;
+      packages.${system} = if oracle == null then {} else { oracle = oracle; };
 
-      clawdbotPlugin = {
+      clawdbotPlugin = if oracle == null then null else {
         name = "oracle";
         skills = [ ./skills/oracle ];
         packages = [ oracle ];

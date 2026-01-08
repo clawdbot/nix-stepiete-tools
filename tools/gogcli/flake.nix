@@ -8,13 +8,13 @@
 
   outputs = { self, nixpkgs, root }:
     let
-      system = "aarch64-darwin";
-      pkgs = import nixpkgs { inherit system; };
-      gogcli = root.packages.${system}.gogcli;
+      system = builtins.currentSystem;
+      packagesForSystem = root.packages.${system} or {};
+      gogcli = packagesForSystem.gogcli or null;
     in {
-      packages.${system}.gogcli = gogcli;
+      packages.${system} = if gogcli == null then {} else { gogcli = gogcli; };
 
-      clawdbotPlugin = {
+      clawdbotPlugin = if gogcli == null then null else {
         name = "gogcli";
         skills = [ ./skills/gog ];
         packages = [ gogcli ];

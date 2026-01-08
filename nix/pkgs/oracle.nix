@@ -122,7 +122,7 @@ PY
     description = "Bundle prompts + files for second-model review";
     homepage = "https://github.com/steipete/oracle";
     license = licenses.mit;
-    platforms = [ "aarch64-darwin" ];
+    platforms = [ "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
     mainProgram = "oracle";
   };
 })
