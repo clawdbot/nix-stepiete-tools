@@ -8,6 +8,7 @@
 , pkg-config
 , makeWrapper
 , jq
+, git
 , pkgs
 , zstd
 }:
@@ -59,6 +60,7 @@ if stdenv.isLinux then
       pkg-config
       makeWrapper
       jq
+      git
       zstd
     ];
 
@@ -74,6 +76,7 @@ if stdenv.isLinux then
       npm_config_build_from_source = "1";
       PNPM_CONFIG_IGNORE_SCRIPTS = "1";
       PNPM_CONFIG_MANAGE_PACKAGE_MANAGER_VERSIONS = "false";
+      PNPM_CONFIG_OFFLINE = "true";
     };
 
     postPatch = ''
@@ -89,8 +92,13 @@ if stdenv.isLinux then
       export PNPM_STORE_PATH="$TMPDIR/pnpm-store"
       mkdir -p "$PNPM_STORE_PATH"
       tar --zstd -xf ${pnpmDeps}/pnpm-store.tar.zst -C "$PNPM_STORE_PATH"
+      chmod -R +w "$PNPM_STORE_PATH"
       pnpm install --offline --frozen-lockfile --store-dir "$PNPM_STORE_PATH" --ignore-scripts
-      pnpm build
+      export PATH="$PWD/node_modules/.bin:$PATH"
+      rm -rf dist packages/core/dist
+      (cd packages/core && tsc -p tsconfig.build.json)
+      tsc -p tsconfig.build.json
+      node scripts/build-cli.mjs
       pnpm prune --prod
       runHook postBuild
     '';
