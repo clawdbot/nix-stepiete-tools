@@ -88,29 +88,44 @@ if stdenv.isLinux then
 
     buildPhase = ''
       runHook preBuild
+      set -euxo pipefail
+      echo "summarize: prepare pnpm store $(date -Is)"
       mkdir -p "$HOME" "$PNPM_HOME" "$PNPM_CONFIG_HOME" "$XDG_CACHE_HOME"
       export PNPM_STORE_PATH="$TMPDIR/pnpm-store"
       mkdir -p "$PNPM_STORE_PATH"
       tar --zstd -xf ${pnpmDeps}/pnpm-store.tar.zst -C "$PNPM_STORE_PATH"
       chmod -R +w "$PNPM_STORE_PATH"
-      pnpm install --offline --frozen-lockfile --store-dir "$PNPM_STORE_PATH" --ignore-scripts
+      echo "summarize: pnpm install $(date -Is)"
+      timeout -k 1m 20m pnpm install --offline --frozen-lockfile --store-dir "$PNPM_STORE_PATH" --ignore-scripts
       export PATH="$PWD/node_modules/.bin:$PATH"
       rm -rf dist packages/core/dist
-      (cd packages/core && tsc -p tsconfig.build.json)
-      tsc -p tsconfig.build.json
-      node scripts/build-cli.mjs
+      echo "summarize: build core $(date -Is)"
+      timeout -k 1m 10m bash -c 'cd packages/core && tsc -p tsconfig.build.json'
+      echo "summarize: build cli $(date -Is)"
+      timeout -k 1m 10m tsc -p tsconfig.build.json
+      echo "summarize: build bundle $(date -Is)"
+      timeout -k 1m 10m node scripts/build-cli.mjs
       runHook postBuild
+    '';
+
+    preFixup = ''
+      echo "summarize: fixup start $(date -Is)"
+    '';
+
+    postFixup = ''
+      echo "summarize: fixup done $(date -Is)"
     '';
 
     installPhase = ''
       runHook preInstall
       mkdir -p "$out/libexec" "$out/libexec/packages" "$out/libexec/apps" "$out/bin"
-      cp -r dist package.json node_modules "$out/libexec/"
+      cp -r dist node_modules "$out/libexec/"
       cp -r packages/core "$out/libexec/packages/"
       cp -r apps/chrome-extension "$out/libexec/apps/"
       chmod 0755 "$out/libexec/dist/cli.js"
       makeWrapper "${nodejs}/bin/node" "$out/bin/summarize" \
-        --add-flags "$out/libexec/dist/cli.js"
+        --add-flags "$out/libexec/dist/cli.js" \
+        --set-default SUMMARIZE_VERSION "${version}"
       runHook postInstall
     '';
   }
